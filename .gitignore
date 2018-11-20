@@ -13,6 +13,7 @@ docs/_build/
 
 .tox
 .coverage
+.mypy_cache
 
 .idea
 tags

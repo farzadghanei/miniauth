@@ -1,0 +1,5 @@
+pytest==4.0.0
+mock==2.0.0
+typing==3.6.6
+pycodestyle==2.4.0
+wheel==0.32.3
