@@ -1,5 +1,6 @@
 from unittest import TestCase
 from miniauth.auth import MiniAuth, create_salt
+from miniauth.storage import SqliteStorage
 
 
 class TestCreateSalt(TestCase):
@@ -17,6 +18,9 @@ class TestCreateSalt(TestCase):
 class TestMiniAuth(TestCase):
     def setUp(self):
         self.miniauth = MiniAuth('testing')
+
+    def test_miniauth_uses_sqlite_storage_by_default(self):
+        self.assertIsInstance(self.miniauth.storage, SqliteStorage)
 
     def test_miniauth_hash_password_without_pepper(self):
         hashed_password = self.miniauth.password_hash('foobar')
