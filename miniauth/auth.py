@@ -4,7 +4,8 @@ miniauth.auth
 MiniAuth library.
 """
 from __future__ import absolute_import
-import os
+import string
+import random
 from hashlib import sha512, sha384, sha256, sha224, sha1, md5
 from .storage import AbstractStorage, SqliteStorage
 from .typing import Text
@@ -14,9 +15,9 @@ DEFAULT_HASH_FUNC = 'sha512'  # type: str
 
 
 def create_salt(length=8):
-    # type: (int) -> bytes
-    # @TODO: support platforms without os.urandom
-    return os.urandom(length)
+    # type: (int) -> str
+    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+    return ''.join(random.choice(chars) for _ in range(length))
 
 
 class MiniAuth(object):

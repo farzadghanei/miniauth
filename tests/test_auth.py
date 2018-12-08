@@ -6,7 +6,7 @@ from miniauth.storage import SqliteStorage
 class TestCreateSalt(TestCase):
     def test_create_salt_returns_str_of_length(self):
         salt = create_salt(5)
-        self.assertIsInstance(salt, bytes)
+        self.assertIsInstance(salt, str)
         self.assertEqual(len(salt), 5)
 
     def test_create_salt_returns_unique_values(self):
