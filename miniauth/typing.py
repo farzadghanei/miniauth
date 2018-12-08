@@ -3,7 +3,7 @@ miniauth.typing
 ---------------
 polyfil module for Python "typing", to avoid
 adding dependency to "typing" module in production
-where we don't need the type checking.
+where type checking is not needed.
 """
 try:
     from typing import Any, Iterable, Mapping, Text

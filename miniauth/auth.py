@@ -1,7 +1,7 @@
 """
 miniauth.auth
 ~~~~~~~~~~~~~
-MiniAuth library.
+MiniAuth authentication library.
 """
 from __future__ import absolute_import
 import string
@@ -52,7 +52,7 @@ class MiniAuth(object):
         # type: () -> str
         return self._default_hash_func
 
-    def password_hash(self, password, hash_func='', salt=None):
+    def password_hash(self, password, hash_func='', salt=''):
         # type: (Text, str, Text) -> Text
         hash_input = salt + password if salt else password
         if not hash_func:
@@ -110,7 +110,7 @@ class MiniAuth(object):
     def user_is_disabled(self, username):
         # type: (Text) -> bool
         record = self._storage.get_record(username)
-        return bool(record['disabled'])
+        return bool(record.get('disabled', False))
 
     def verify_user(self, username, password):
         # type: (Text, Text) -> bool

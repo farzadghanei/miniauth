@@ -1,3 +1,8 @@
+"""
+miniauth.storage
+~~~~~~~~~~~~~~~~
+Storage impelentations
+"""
 from __future__ import absolute_import
 from abc import ABCMeta, abstractmethod
 from .typing import Any, Iterable, Mapping, Text
