@@ -39,7 +39,8 @@ class MiniAuth(object):
         if storage and not isinstance(storage, AbstractStorage):
             raise ValueError('storage should subclass AbstractStorage')
         self._storage = storage or SqliteStorage(db_path)  # type: AbstractStorage
-        self._default_hash_func = self._storage.get_default_hash_func() or DEFAULT_HASH_FUNC  # type: str
+        self._default_hash_func = self._storage.chose_default_hash_func(
+                self.hash_functions.keys()) or DEFAULT_HASH_FUNC  # type: str
 
     @property
     def storage(self):
@@ -50,11 +51,6 @@ class MiniAuth(object):
     def default_hash_func(self):
         # type: () -> str
         return self._default_hash_func
-
-    @default_hash_func.setter
-    def default_hash_func(self, func):
-        # type: (str) -> None
-        self._default_hash_func = func
 
     def password_hash(self, password, hash_func='', salt=None):
         # type: (Text, str, Text) -> Text
@@ -98,15 +94,13 @@ class MiniAuth(object):
         otherwise.
         """
         if self.user_exists(username):
-            self._storage.disable_record(username)
-            return True
+            return self._storage.disable_record(username)
         return False
 
     def enable_user(self, username):
         # type: (Text) -> bool
         if self.user_exists(username):
-            self._storage.enable_record(username)
-            return True
+            return self._storage.enable_record(username)
         return False
 
     def user_exists(self, username):

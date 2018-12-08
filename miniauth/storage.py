@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from abc import ABCMeta, abstractmethod
-from .typing import Any, Mapping, Text
+from .typing import Any, Iterable, Mapping, Text
 
 
 class AbstractStorage(object):
@@ -18,8 +18,15 @@ class AbstractStorage(object):
     def __init__(self, db_path):
         self.db_path = db_path
 
-    def get_default_hash_func(self):
-        # type: () -> str
+    def chose_default_hash_func(self, hash_funcs):
+        # type: (Iterable[str]) -> str
+        """Chose the default hash function preferred by the storage.
+        An external storage (possibly shared by other systems)
+        may have a different convention for default hash function than mini auth.
+
+        Return empty string (default behavior) to let minitauth chose the default hash
+        function.
+        """
         return ''
 
     @abstractmethod
@@ -45,12 +52,20 @@ class AbstractStorage(object):
     @abstractmethod
     def enable_record(self, user):
         # type: (Text) -> bool
-        pass
+        """Mark the record as enabled and return True.
+        If the storage does not support disabling/enabling users, or failed to
+        enable the user return False.
+        """
+        return False
 
     @abstractmethod
     def disable_record(self, user):
         # type: (Text) -> bool
-        pass
+        """Mark the record as disabled and return True.
+        If the storage does not support disabling/enabling users, or failed to
+        disable the user return False.
+        """
+        return False
 
     @abstractmethod
     def delete_record(self, user):
