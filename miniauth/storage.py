@@ -8,7 +8,7 @@ import sqlite3
 from logging import getLogger
 from abc import ABCMeta, abstractmethod
 from contextlib import closing
-from .typing import Any, AnyStr, Iterable, Mapping, Text, Tuple
+from .typing import Any, AnyStr, Iterable, List, Mapping, Text, Tuple
 
 
 logger = getLogger(__name__)
@@ -109,7 +109,7 @@ class SqliteStorage(AbstractStorage):
     """Storage backend using SQLite database files"""
 
     def _query_db(self, query, params=()):
-        # type: (AnyStr, Iterable[AnyStr]) -> Tuple[Any, Any, Any]
+        # type: (AnyStr, Iterable[AnyStr]) -> Tuple[List[Any], int, int]
         """Run the query with optional parameters, return
         row count, all fetch resuts and last row id as a tuple
         """
@@ -119,10 +119,10 @@ class SqliteStorage(AbstractStorage):
             with closing(cursor):
                 cursor.execute(str(query), params)
                 db_con.commit()
-                row_count = cursor.rowcount
                 query_results = cursor.fetchall()
+                row_count = cursor.rowcount
                 last_row_id = cursor.lastrowid
-        return row_count, query_results, last_row_id
+        return query_results, row_count, last_row_id
 
     def _multi_query(self, queries):
         # type: (Iterable[AnyStr]) -> None
@@ -139,9 +139,9 @@ class SqliteStorage(AbstractStorage):
         # type: () -> int
         """Return current DB schema version, return 0 if version can't be detected"""
         try:
-            _, results, _ = self._query_db('SELECT MAX(version) as version FROM meta')
-            if results:
-                return results[0]['version']
+            rows, _, _ = self._query_db('SELECT MAX(version) FROM meta')
+            if rows:
+                return rows[0][0]
         except sqlite3.OperationalError as exp:
             pass
         return 0
@@ -180,7 +180,12 @@ class SqliteStorage(AbstractStorage):
 
     def record_exists(self, user):
         # type: (Text) -> bool
-        raise NotImplementedError()
+        self._pre_read()
+        rows, _, _ = self._query_db(
+            'SELECT username FROM user WHERE username = ?',
+            (user,)
+        )
+        return len(rows) > 0
 
     def get_record(self, user):
         # type: (Text) -> Mapping

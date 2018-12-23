@@ -12,12 +12,12 @@ class TestSqliteStorage(HasTempfileTestCase):
     def _db_connect(self):
         return sqlite3.connect(self._tempfile_name)
 
-    def _query_db(self, query):
+    def _query_db(self, query, args=()):
         db_con = self._db_connect()
         cursor = db_con.cursor()
         with closing(db_con):
             with closing(cursor):
-                cursor.execute(query)
+                cursor.execute(query, args)
                 db_con.commit()
                 return cursor.fetchall()
 
@@ -36,7 +36,7 @@ class TestSqliteStorage(HasTempfileTestCase):
     def test_new_storage_wont_create_db_yet(self):
         self.assertEqual(b'', self._tempfile.read())
 
-    def test_create_record_creates_user_table(self):
+    def test_create_record_creates_db_schema_if_does_not_exist(self):
         self.storage.create_record('user2', '81956f2bdddda4b253af6c0a0fc63c05', 'md5', 'asalt')
         self._assertTablesExist(('user', 'meta'))
 
@@ -45,3 +45,14 @@ class TestSqliteStorage(HasTempfileTestCase):
         rows = self._query_db('SELECT username, password, hash, salt FROM user')
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0], (u'testuser', u'81956f2bdddda4b253af6c0a0fc63c05', u'md5', u'asalt'))
+
+    def test_record_exists_creates_db_schema_if_does_not_exist(self):
+        self.storage.record_exists('testuser')
+        self._assertTablesExist(('user', 'meta'))
+
+    def test_record_exists_return_true_if_user_exists(self):
+        self.storage.create_record('testuser', '81956f2bdddda4b253af6c0a0fc63c05', 'md5', 'asalt')
+        self.assertTrue(self.storage.record_exists('testuser'))
+
+    def test_record_exists_return_false_if_record_does_not_exist(self):
+        self.assertFalse(self.storage.record_exists('testuser'))
