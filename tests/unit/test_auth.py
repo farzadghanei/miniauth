@@ -1,9 +1,9 @@
-from unittest import TestCase
 from miniauth.auth import MiniAuth, create_salt
 from miniauth.storage import SqliteStorage
+from tests.helpers import BaseTestCase
 
 
-class TestCreateSalt(TestCase):
+class TestCreateSalt(BaseTestCase):
     def test_create_salt_returns_str_of_length(self):
         salt = create_salt(5)
         self.assertIsInstance(salt, str)
@@ -15,7 +15,7 @@ class TestCreateSalt(TestCase):
         self.assertEqual(len(unique_salts), 100)
 
 
-class TestMiniAuth(TestCase):
+class TestMiniAuth(BaseTestCase):
     def setUp(self):
         self.miniauth = MiniAuth('testing')
         self.password = 'abcd1234'
