@@ -221,7 +221,7 @@ class SqliteStorage(AbstractStorage):
             record['password'] = row[0]
             record['hash_func'] = row[1]
             record['salt'] = row[2]
-            record['disabled'] = row[3]
+            record['disabled'] = bool(row[3])
         return record
 
     def update_record(self, user, password_hash, hash_func, salt):
@@ -230,11 +230,21 @@ class SqliteStorage(AbstractStorage):
 
     def enable_record(self, user):
         # type: (Text) -> bool
-        raise NotImplementedError()
+        self._pre_write()
+        _, row_count, _ = self._query_db(
+            'UPDATE user set disabled = 0 WHERE username = ?',
+            (user,)
+        )
+        return row_count == 1
 
     def disable_record(self, user):
         # type: (Text) -> bool
-        raise NotImplementedError()
+        self._pre_write()
+        _, row_count, _ = self._query_db(
+            'UPDATE user set disabled = 1 WHERE username = ?',
+            (user,)
+        )
+        return row_count == 1
 
     def delete_record(self, user):
         # type: (Text) -> bool

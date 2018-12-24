@@ -42,9 +42,9 @@ class TestSqliteStorage(HasTempfileTestCase):
 
     def test_create_record_creates_user_record(self):
         self.storage.create_record('testuser', '81956f2bdddda4b253af6c0a0fc63c05', 'md5', 'asalt')
-        rows = self._query_db('SELECT username, password, hash, salt FROM user')
+        rows = self._query_db('SELECT username, password, hash, salt, disabled FROM user')
         self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0], (u'testuser', u'81956f2bdddda4b253af6c0a0fc63c05', u'md5', u'asalt'))
+        self.assertEqual(rows[0], (u'testuser', u'81956f2bdddda4b253af6c0a0fc63c05', u'md5', u'asalt', False))
 
     def test_record_exists_creates_db_schema_if_does_not_exist(self):
         self.storage.record_exists('testuser')
@@ -85,3 +85,19 @@ class TestSqliteStorage(HasTempfileTestCase):
                 'disabled': False,
             }
         )
+
+    def test_disable_record_sets_disabled_field_to_true(self):
+        self.assertFalse(self.storage.record_exists('testuser'))  # create schema
+        self._query_db('INSERT INTO user VALUES (NULL, "testuser", "81956f2bdddda4b253af6c0a0fc63c05", "md5", "asalt", 0)')
+        self.storage.disable_record('testuser')
+        record = self.storage.get_record('testuser')
+        self.assertEqual(record['password'], '81956f2bdddda4b253af6c0a0fc63c05')  # ensure record is read from storage
+        self.assertTrue(record['disabled'])
+
+    def test_enable_record_sets_disabled_field_to_false(self):
+        self.assertFalse(self.storage.record_exists('testuser'))  # create schema
+        self._query_db('INSERT INTO user VALUES (NULL, "testuser", "81956f2bdddda4b253af6c0a0fc63c05", "md5", "asalt", 1)')
+        self.storage.enable_record('testuser')
+        record = self.storage.get_record('testuser')
+        self.assertEqual(record['password'], '81956f2bdddda4b253af6c0a0fc63c05')  # ensure record is read from storage
+        self.assertFalse(record['disabled'])
