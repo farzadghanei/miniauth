@@ -56,3 +56,32 @@ class TestSqliteStorage(HasTempfileTestCase):
 
     def test_record_exists_return_false_if_record_does_not_exist(self):
         self.assertFalse(self.storage.record_exists('testuser'))
+
+    def test_get_record_creates_db_schema_if_does_not_exist(self):
+        self.storage.get_record('testuser')
+        self._assertTablesExist(('user', 'meta'))
+
+    def test_get_record_returns_dict_with_empty_data_if_no_such_user_exist(self):
+        self.assertEqual(
+            self.storage.get_record('testuser'),
+            {
+                'username': 'testuser',
+                'password': '',
+                'hash_func': '',
+                'salt': '',
+                'disabled': False,
+            }
+        )
+
+    def test_get_record_returns_dictionary_if_user_info_exists(self):
+        self.storage.create_record('testuser', '81956f2bdddda4b253af6c0a0fc63c05', 'md5', 'asalt')
+        self.assertEqual(
+            self.storage.get_record('testuser'),
+            {
+                'username': 'testuser',
+                'password': '81956f2bdddda4b253af6c0a0fc63c05',
+                'hash_func': 'md5',
+                'salt': 'asalt',
+                'disabled': False,
+            }
+        )

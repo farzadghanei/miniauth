@@ -59,7 +59,22 @@ class AbstractStorage(object):
     @abstractmethod
     def get_record(self, user):
         # type: (Text) -> Mapping[Text, Any]
-        pass
+        """Return the record regarding the user.
+        If user does not exist, return empty values for the record.
+        Return dict keys should be:
+            username: (str) the same as the user
+            password: (str) the user password (hashed)
+            hash_func: (str) function name used to hash the password
+            salt: (str) salt used for hashing
+            disabled: (bool) if user is disabled [optional]
+        """
+        return {
+            'username': user,
+            'password': '',
+            'hash_func': '',
+            'salt': '',
+            'disabled': False,
+        }
 
     @abstractmethod
     def update_record(self, user, password_hash, hash_func, salt):
@@ -189,7 +204,25 @@ class SqliteStorage(AbstractStorage):
 
     def get_record(self, user):
         # type: (Text) -> Mapping
-        raise NotImplementedError()
+        self._pre_read()
+        rows, _, _ = self._query_db(
+            'SELECT password, hash, salt, disabled FROM user WHERE username = ?',
+            (user,)
+        )
+        record = {
+            'username': user,
+            'password': '',
+            'hash_func': '',
+            'salt': '',
+            'disabled': False,
+        }
+        if rows:
+            row = rows[0]
+            record['password'] = row[0]
+            record['hash_func'] = row[1]
+            record['salt'] = row[2]
+            record['disabled'] = row[3]
+        return record
 
     def update_record(self, user, password_hash, hash_func, salt):
         # type: (Text, Text, str, str) -> None
