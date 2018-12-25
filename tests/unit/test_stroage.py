@@ -86,18 +86,39 @@ class TestSqliteStorage(HasTempfileTestCase):
             }
         )
 
-    def test_disable_record_sets_disabled_field_to_true(self):
+    def test_disable_record_sets_disabled_field_to_true_and_returns_true(self):
         self.assertFalse(self.storage.record_exists('testuser'))  # create schema
-        self._query_db('INSERT INTO user VALUES (NULL, "testuser", "81956f2bdddda4b253af6c0a0fc63c05", "md5", "asalt", 0)')
-        self.storage.disable_record('testuser')
+        self._query_db(
+            'INSERT INTO user VALUES (NULL, "testuser", "81956f2bdddda4b253af6c0a0fc63c05", "md5", "asalt", 0)'
+        )
+        self.assertTrue(self.storage.disable_record('testuser'))
         record = self.storage.get_record('testuser')
         self.assertEqual(record['password'], '81956f2bdddda4b253af6c0a0fc63c05')  # ensure record is read from storage
         self.assertTrue(record['disabled'])
 
-    def test_enable_record_sets_disabled_field_to_false(self):
+    def test_disable_record_returns_false_when_user_does_not_exist(self):
+        self.assertFalse(self.storage.disable_record('testuser'))
+
+    def test_enable_record_sets_disabled_field_to_false_and_returns_true(self):
         self.assertFalse(self.storage.record_exists('testuser'))  # create schema
-        self._query_db('INSERT INTO user VALUES (NULL, "testuser", "81956f2bdddda4b253af6c0a0fc63c05", "md5", "asalt", 1)')
+        self._query_db(
+            'INSERT INTO user VALUES (NULL, "testuser", "81956f2bdddda4b253af6c0a0fc63c05", "md5", "asalt", 1)'
+        )
         self.storage.enable_record('testuser')
         record = self.storage.get_record('testuser')
         self.assertEqual(record['password'], '81956f2bdddda4b253af6c0a0fc63c05')  # ensure record is read from storage
         self.assertFalse(record['disabled'])
+
+    def test_enable_record_returns_false_when_user_does_not_exist(self):
+        self.assertFalse(self.storage.enable_record('testuser'))
+
+    def test_delete_record_removes_deletes_the_row_and_returns_true(self):
+        self.assertFalse(self.storage.record_exists('testuser'))  # create schema
+        self._query_db(
+            'INSERT INTO user VALUES (NULL, "testuser", "81956f2bdddda4b253af6c0a0fc63c05", "md5", "asalt", 1)'
+        )
+        self.assertTrue(self.storage.delete_record('testuser'))
+        self.assertFalse(self.storage.record_exists('testuser'))
+
+    def test_delete_record_returns_false_when_user_does_not_exist(self):
+        self.assertFalse(self.storage.delete_record('testuser'))

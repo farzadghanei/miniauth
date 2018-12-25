@@ -248,4 +248,9 @@ class SqliteStorage(AbstractStorage):
 
     def delete_record(self, user):
         # type: (Text) -> bool
-        raise NotImplementedError()
+        self._pre_write()
+        _, row_count, _ = self._query_db(
+            'DELETE FROM user WHERE username = ?',
+            (user,)
+        )
+        return row_count == 1
