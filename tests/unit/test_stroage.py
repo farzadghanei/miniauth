@@ -46,22 +46,15 @@ class TestSqliteStorage(HasTempfileTestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0], (u'testuser', u'81956f2bdddda4b253af6c0a0fc63c05', u'md5', u'asalt', False))
 
-    def test_record_exists_creates_db_schema_if_does_not_exist(self):
-        self.storage.record_exists('testuser')
-        self._assertTablesExist(('user', 'meta'))
-
     def test_record_exists_return_true_if_user_exists(self):
         self.storage.create_record('testuser', '81956f2bdddda4b253af6c0a0fc63c05', 'md5', 'asalt')
         self.assertTrue(self.storage.record_exists('testuser'))
 
-    def test_record_exists_return_false_if_record_does_not_exist(self):
+    def test_record_exists_return_false_if_record_does_not_exist_yet_creates_schmea(self):
         self.assertFalse(self.storage.record_exists('testuser'))
-
-    def test_get_record_creates_db_schema_if_does_not_exist(self):
-        self.storage.get_record('testuser')
         self._assertTablesExist(('user', 'meta'))
 
-    def test_get_record_returns_dict_with_empty_data_if_no_such_user_exist(self):
+    def test_get_record_returns_dict_with_empty_data_if_no_such_user_exist_and_creates_schema(self):
         self.assertEqual(
             self.storage.get_record('testuser'),
             {
@@ -72,6 +65,7 @@ class TestSqliteStorage(HasTempfileTestCase):
                 'disabled': False,
             }
         )
+        self._assertTablesExist(('user', 'meta'))
 
     def test_get_record_returns_dictionary_if_user_info_exists(self):
         self.storage.create_record('testuser', '81956f2bdddda4b253af6c0a0fc63c05', 'md5', 'asalt')
@@ -96,8 +90,9 @@ class TestSqliteStorage(HasTempfileTestCase):
         self.assertEqual(record['password'], '81956f2bdddda4b253af6c0a0fc63c05')  # ensure record is read from storage
         self.assertTrue(record['disabled'])
 
-    def test_disable_record_returns_false_when_user_does_not_exist(self):
+    def test_disable_record_returns_false_when_user_does_not_exist_yet_creates_schema(self):
         self.assertFalse(self.storage.disable_record('testuser'))
+        self._assertTablesExist(('user', 'meta'))
 
     def test_enable_record_sets_disabled_field_to_false_and_returns_true(self):
         self.assertFalse(self.storage.record_exists('testuser'))  # create schema
@@ -109,8 +104,9 @@ class TestSqliteStorage(HasTempfileTestCase):
         self.assertEqual(record['password'], '81956f2bdddda4b253af6c0a0fc63c05')  # ensure record is read from storage
         self.assertFalse(record['disabled'])
 
-    def test_enable_record_returns_false_when_user_does_not_exist(self):
+    def test_enable_record_returns_false_when_user_does_not_exist_yet_creates_schema(self):
         self.assertFalse(self.storage.enable_record('testuser'))
+        self._assertTablesExist(('user', 'meta'))
 
     def test_delete_record_removes_deletes_the_row_and_returns_true(self):
         self.assertFalse(self.storage.record_exists('testuser'))  # create schema
@@ -120,8 +116,9 @@ class TestSqliteStorage(HasTempfileTestCase):
         self.assertTrue(self.storage.delete_record('testuser'))
         self.assertFalse(self.storage.record_exists('testuser'))
 
-    def test_delete_record_returns_false_when_user_does_not_exist(self):
+    def test_delete_record_returns_false_when_user_does_not_exist_yet_creates_schema(self):
         self.assertFalse(self.storage.delete_record('testuser'))
+        self._assertTablesExist(('user', 'meta'))
 
     def test_update_record_updates_password_and_hash_and_salt_returns_true(self):
         self.assertFalse(self.storage.record_exists('testuser'))  # create schema
@@ -137,7 +134,8 @@ class TestSqliteStorage(HasTempfileTestCase):
         self.assertEqual(record['hash_func'], 'sha256')
         self.assertFalse(record['disabled'])
 
-    def test_update_record_returns_false_when_user_does_not_exist(self):
+    def test_update_record_returns_false_when_user_does_not_exist_yet_creates_schema(self):
         self.assertFalse(
             self.storage.update_record('testuser', '662adlj2l3j232lkj11121', 'sha256', 'othersalt')
         )
+        self._assertTablesExist(('user', 'meta'))
