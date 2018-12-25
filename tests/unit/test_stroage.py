@@ -26,6 +26,11 @@ class TestSqliteStorage(HasTempfileTestCase):
         for table in tables:
             self.assertIn(table, all_tables)
 
+    def _assertDbVersion(self, version):
+        all_versions = sorted([row[0] for row in self._query_db('SELECT version FROM meta')])
+        self.assertEqual(all_versions.count(version), 1, 'versoin {} record exists more than once'.format(version))
+        self.assertEqual(max(all_versions), version)
+
     def test_db_path_returns_the_path_to_file(self):
         self.assertEqual(self.storage.db_path, self._tempfile_name)
 
@@ -39,6 +44,12 @@ class TestSqliteStorage(HasTempfileTestCase):
     def test_create_record_creates_db_schema_if_does_not_exist(self):
         self.storage.create_record('user2', '81956f2bdddda4b253af6c0a0fc63c05', 'md5', 'asalt')
         self._assertTablesExist(('user', 'meta'))
+
+    def test_create_record_wont_create_schmea_if_exists(self):
+        self.storage.create_record('user1', '81956f2bdddda4b253af6c0a0fc63c05', 'md5', 'asalt')
+        self.storage.create_record('user2', '81956f2bdddda4b253af6c0a0fc63c05', 'md5', 'asalt')
+        self._assertTablesExist(('user', 'meta'))
+        self._assertDbVersion(1)
 
     def test_create_record_creates_user_record(self):
         self.storage.create_record('testuser', '81956f2bdddda4b253af6c0a0fc63c05', 'md5', 'asalt')
@@ -139,3 +150,21 @@ class TestSqliteStorage(HasTempfileTestCase):
             self.storage.update_record('testuser', '662adlj2l3j232lkj11121', 'sha256', 'othersalt')
         )
         self._assertTablesExist(('user', 'meta'))
+
+    def test_storage_methods_in_sequence_operate_as_expected(self):
+        self.storage.create_record('user2', '81956f2bdddda4b253af6c0a0fc63c05', 'md5', 'asalt')
+        self._assertTablesExist(('user', 'meta'))
+        self.assertTrue(self.storage.record_exists('user2'))
+        record = self.storage.get_record('user2')
+        self.assertEqual(record['password'], '81956f2bdddda4b253af6c0a0fc63c05')
+        self.assertTrue(self.storage.disable_record('user2'))
+        self.assertTrue(self.storage.get_record('user2')['disabled'])
+        self.assertTrue(self.storage.enable_record('user2'))
+        self.assertFalse(self.storage.get_record('user2')['disabled'])
+        self.assertTrue(
+            self.storage.update_record('user2', '662adlj2l3j232lkj11121', 'sha256', 'othersalt')
+        )
+        self.assertEqual(self.storage.get_record('user2')['salt'], 'othersalt')
+        self.assertTrue(self.storage.delete_record('user2'))
+        self.assertFalse(self.storage.record_exists('user2'))
+        self._assertDbVersion(1)
