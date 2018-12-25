@@ -122,3 +122,22 @@ class TestSqliteStorage(HasTempfileTestCase):
 
     def test_delete_record_returns_false_when_user_does_not_exist(self):
         self.assertFalse(self.storage.delete_record('testuser'))
+
+    def test_update_record_updates_password_and_hash_and_salt_returns_true(self):
+        self.assertFalse(self.storage.record_exists('testuser'))  # create schema
+        self._query_db(
+            'INSERT INTO user VALUES (NULL, "testuser", "81956f2bdddda4b253af6c0a0fc63c05", "md5", "asalt", 0)'
+        )
+        self.assertTrue(
+            self.storage.update_record('testuser', '662adlj2l3j232lkj11121', 'sha256', 'othersalt')
+        )
+        record = self.storage.get_record('testuser')
+        self.assertEqual(record['password'], '662adlj2l3j232lkj11121')  # ensure record is read from storage
+        self.assertEqual(record['salt'], 'othersalt')
+        self.assertEqual(record['hash_func'], 'sha256')
+        self.assertFalse(record['disabled'])
+
+    def test_update_record_returns_false_when_user_does_not_exist(self):
+        self.assertFalse(
+            self.storage.update_record('testuser', '662adlj2l3j232lkj11121', 'sha256', 'othersalt')
+        )

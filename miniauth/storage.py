@@ -78,7 +78,7 @@ class AbstractStorage(object):
 
     @abstractmethod
     def update_record(self, user, password_hash, hash_func, salt):
-        # type: (Text, Text, str, str) -> None
+        # type: (Text, Text, str, str) -> bool
         pass
 
     @abstractmethod
@@ -126,7 +126,7 @@ class SqliteStorage(AbstractStorage):
     def _query_db(self, query, params=()):
         # type: (AnyStr, Iterable[AnyStr]) -> Tuple[List[Any], int, int]
         """Run the query with optional parameters, return
-        row count, all fetch resuts and last row id as a tuple
+        all result rows, row count and last row id as a tuple
         """
         db_con = sqlite3.connect(self.db_path)
         cursor = db_con.cursor()
@@ -225,8 +225,13 @@ class SqliteStorage(AbstractStorage):
         return record
 
     def update_record(self, user, password_hash, hash_func, salt):
-        # type: (Text, Text, str, str) -> None
-        raise NotImplementedError()
+        # type: (Text, Text, str, str) -> bool
+        self._pre_write()
+        _, row_count, _ = self._query_db(
+            'UPDATE user SET password = ?, hash = ?, salt = ? WHERE username = ?',
+            (password_hash, hash_func, salt, user)
+        )
+        return row_count == 1
 
     def enable_record(self, user):
         # type: (Text) -> bool
