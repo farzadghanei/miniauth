@@ -1,10 +1,16 @@
 from abc import ABCMeta, abstractmethod
 from tempfile import NamedTemporaryFile
 from unittest import TestCase
+from mock import Mock, patch
 
 
 class BaseTestCase(TestCase):
-    pass
+    def patch(self, target, mock_=None):
+        if not mock_:
+            mock_ = Mock()
+        patcher = patch(target, mock_)
+        self.addCleanup(patcher.stop)
+        return patcher.start()
 
 
 class HasTempfileTestCase(BaseTestCase):
