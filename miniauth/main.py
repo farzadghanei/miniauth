@@ -5,6 +5,7 @@ MiniAuth program interface.
 """
 import sys
 from argparse import ArgumentParser
+from getpass import getpass
 from logging import getLogger, INFO, DEBUG, StreamHandler, Logger, NullHandler
 from miniauth import __version__
 from miniauth.auth import MiniAuth
@@ -45,6 +46,7 @@ def parse_args(args=None):
     parser_enable = subparsers.add_parser('enable', help='enable an existing user')
     parser_enable.add_argument('--ignore-missing', '-i', action='store_true', help='ignore missing user')
     parser_enable.add_argument('user', help='username to remove')
+
 
     return parser.parse_args(args)
 
@@ -117,7 +119,7 @@ def main(args=None):
 
         mini_auth = MiniAuth(db_path=opts.storage)
         if opts.action == 'save':
-            password = opts.password or prompt_password()
+            password = opts.password or getpass()
             return save_user(mini_auth, opts.user, password, opts.hash, opts.force)
         if opts.action == 'remove':
             return remove_user(mini_auth, opts.user, opts.ignore_missing)
