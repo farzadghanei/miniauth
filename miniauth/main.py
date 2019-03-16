@@ -9,14 +9,16 @@ from getpass import getpass
 from logging import getLogger, INFO, DEBUG, StreamHandler, Logger, NullHandler
 from miniauth import __version__
 from miniauth.auth import MiniAuth
-from miniauth.typing import Text
+from miniauth.typing import Any, Text, Tuple
+from miniauth.utils import prompt, read_lines_from_file
 
 # corresponding os.EX_* if available
 EX_OK = 0
 EX_ALREADY_EXISTS = 1
 EX_NOUSER = 67
-EX_TEMPFAIL = 75
+EX_VERIFYFAILD = 68
 EX_SOFTWARE = 70
+EX_TEMPFAIL = 75
 
 logger = getLogger()  # type: Logger
 
@@ -47,6 +49,18 @@ def parse_args(args=None):
     parser_enable.add_argument('--ignore-missing', '-i', action='store_true', help='ignore missing user')
     parser_enable.add_argument('user', help='username to remove')
 
+    parser_verify = subparsers.add_parser('verify', help='verify user credentials')
+    verify_mutual_ex_args = parser_verify.add_mutually_exclusive_group()
+    verify_mutual_ex_args.add_argument(
+        '--password-file',
+        help='read password from the first line of the file (- for stdin). disables prompting'
+    )
+    verify_mutual_ex_args.add_argument(
+        '--creds-file',
+        help='read username and password from a first and 2nd lines of a file (- for stdin). disables prompting'
+    )
+    parser_verify.add_argument('user', nargs='?', help='username to verify')
+    parser_verify.add_argument('password', nargs='?', help='password to verify')
 
     return parser.parse_args(args)
 
@@ -107,9 +121,48 @@ def enable_user(mini_auth, user, ignore_missing=False):
     return EX_SOFTWARE
 
 
-def verify_user(user, password):
-    # type: (Text, Text) -> int
-    pass
+def verify_user(mini_auth, user, password):
+    # type: (MiniAuth, Text, Text) -> int
+    if mini_auth.verify_user(user, password):
+        logger.debug("user {} credentials are correct".format(user))
+        return EX_OK
+    logger.info("invalid credentias for user {}".format(user))
+    return EX_VERIFYFAILD
+
+
+def _get_user_password_from_opts(opts):
+    # type: (Any) -> Tuple[Text, Text]
+    """Gets the user/password from provided options, if necessary would
+    read from files or streams.
+    """
+    user, password = opts.user, ''
+    if opts.user and opts.password:
+        password = opts.password
+    elif opts.creds_file:
+        lines = read_lines_from_file(opts.creds_file, 2)
+        user = opts.user or lines[0]
+        if not user:
+            raise ValueError("user is not specified, nor could be read from creds file")
+        password = opts.password or lines[1]
+        if not password:
+            raise ValueError("password is not specified, nor could be read from creds file")
+    elif opts.password_file:
+        lines = read_lines_from_file(opts.password_file, 1)
+        password = opts.password or lines[0]
+        if not password:
+            raise ValueError("password is not specified, nor could be read from password file")
+    if not user:
+        user = prompt('User: ')
+    if not password:
+        password = getpass()
+
+    return user, password
+
+
+def verify_user_from_opts(mini_auth, opts):
+    # type: (MiniAuth, Any) -> int
+    user, password = _get_user_password_from_opts(opts)
+    return verify_user(mini_auth, user, password)
 
 
 def main(args=None):
@@ -118,6 +171,8 @@ def main(args=None):
         configure_logger(logger, quiet=opts.quiet)
 
         mini_auth = MiniAuth(db_path=opts.storage)
+        if opts.action == 'verify':
+            return verify_user_from_opts(mini_auth, opts)
         if opts.action == 'save':
             password = opts.password or getpass()
             return save_user(mini_auth, opts.user, password, opts.hash, opts.force)
