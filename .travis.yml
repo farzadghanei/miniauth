@@ -29,6 +29,7 @@ after_success:
   - "pip install dist/*.whl"
   - "python -c 'import miniauth'"
   - "python -c 'import miniauth.main'"
+  - "miniauth --version"
 
 notifications:
   email: false
