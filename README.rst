@@ -21,6 +21,15 @@ has no dependencies other than Python standard library.
    False
 
 
+A CLI tool helps to use a local database of users.
+
+.. code-block::
+
+   $ miniauth save testuser
+   Password:
+   $ miniauth verify testuser
+   Password:
+
 
 Installation
 ============
