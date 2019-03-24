@@ -45,7 +45,10 @@ setup_params = dict(
     classifiers=classifiers,
     keywords='auth userdb',
     test_suite='tests',
-    zip_safe=True
+    zip_safe=True,
+    entry_points=dict(
+        console_scripts=['miniauth=miniauth.main:main']
+    ),
 )
 
 setup_params["extras_require"] = {"dev": ["pytest", "mock", "typing", "pycodestyle"]}
