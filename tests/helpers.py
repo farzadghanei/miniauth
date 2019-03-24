@@ -14,18 +14,20 @@ class BaseTestCase(TestCase):
 
 
 class HasTempfileTestCase(BaseTestCase):
-    _tempfile_mode = 'w+b'
-    _tempfile_prefix = 'tmp'
-    _tempfile_dir = None
+    _temp_file_mode = 'w+b'
+    _temp_file_prefix = 'tmp'
+    _temp_file_dir = None
 
-    def _create_temp_file(self):
-        return NamedTemporaryFile(
-                mode=self._tempfile_mode,
-                prefix=self._tempfile_prefix,
-                dir=self._tempfile_dir
+    def _create_temp_file(self, auto_close=True):
+        temp_file = NamedTemporaryFile(
+                mode=self._temp_file_mode,
+                prefix=self._temp_file_prefix,
+                dir=self._temp_file_dir
                )
+        if auto_close:
+            self.addCleanup(temp_file.close)
+        return temp_file
 
     def setUp(self):
         self._tempfile = self._create_temp_file()
-        self.addCleanup(self._tempfile.close)
         self._tempfile_name = self._tempfile.name
