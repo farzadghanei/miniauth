@@ -8,7 +8,7 @@ from miniauth import __version__
 
 
 classifiers = [
-    'Development Status :: 1 - Planning',
+    'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
     'Intended Audience :: System Administrators',
     'License :: OSI Approved :: MIT License',
@@ -29,12 +29,12 @@ classifiers = [
 ]
 
 long_description = __doc__
-with open('README.rst', 'rt') as fh:
-    long_description = fh.read()
+with open('README.rst', 'rb') as fh:
+    long_description = fh.read().decode('utf-8', errors='ignore')
 
 setup_params = dict(
     name='miniauth',
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['tests', 'tests.*']),
     version=__version__,
     description='Simple local user authentication',
     long_description=long_description,
@@ -48,7 +48,7 @@ setup_params = dict(
     zip_safe=True
 )
 
-setup_params["extras_require"] = {"dev": ["pytest", "mock", "typing"]}
+setup_params["extras_require"] = {"dev": ["pytest", "mock", "typing", "pycodestyle"]}
 
 
 if __name__ == '__main__':
