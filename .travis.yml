@@ -1,0 +1,32 @@
+language: python
+
+# Tox config has multiple environments for Python 2/3.
+# avoid running all envs for each Travis env
+matrix:
+  include:
+    - python: 2.7
+      env: TOXENV=py27
+    - python: 3.4
+      env: TOXENV=py3
+    - python: 3.5
+      env: TOXENV=py3
+    - python: 3.6
+      env: TOXENV=py3
+    - python: 3.7-dev
+      env: TOXENV=py3
+
+install:
+  - "pip install tox"
+  - "pip install -r requirements/dev.txt"
+
+script:
+  - "tox"
+  - "python setup.py bdist_wheel -d dist"
+
+after_success:
+  - "pip install dist/*.whl"
+  - "python -c 'import miniauth'"
+  - "python -c 'import miniauth.main'"
+
+notifications:
+  email: false
