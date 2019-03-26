@@ -1,3 +1,5 @@
+import sys
+from logging import NullHandler, StreamHandler, INFO, DEBUG
 from miniauth.auth import MiniAuth
 from miniauth.main import (main, save_user, remove_user, disable_user,
                            enable_user, verify_user, verify_user_from_opts,
@@ -390,3 +392,23 @@ class TestMain(BaseTestCase):
         self.assertEqual(user, 'testuser')
         self.assertTrue(ignore_missing)
         self.assertIsInstance(auth, MiniAuth)
+
+    def test_main_configures_logger_with_stream_handler_by_default(self):
+        main(['verify', 'testuser', 'testpassword']),
+        self.assertEqual(self.mock_logger.addHandler.call_count, 1)
+        handler = self.mock_logger.addHandler.call_args[0][0]
+        self.assertIsInstance(handler, StreamHandler)
+        self.assertEqual(handler.level, INFO)
+
+    def test_main_configures_logger_with_stream_handler_debug_level_on_verbose(self):
+        main(['--verbose', 'verify', 'testuser', 'testpassword']),
+        self.assertEqual(self.mock_logger.addHandler.call_count, 1)
+        handler = self.mock_logger.addHandler.call_args[0][0]
+        self.assertIsInstance(handler, StreamHandler)
+        self.assertEqual(handler.level, DEBUG)
+
+    def test_main_configures_logger_with_null_handler_in_quiet_mode(self):
+        main(['--quiet', 'verify', 'testuser', 'testpassword']),
+        self.assertEqual(self.mock_logger.addHandler.call_count, 1)
+        handler = self.mock_logger.addHandler.call_args[0][0]
+        self.assertIsInstance(handler, NullHandler)

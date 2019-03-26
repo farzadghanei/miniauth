@@ -6,7 +6,8 @@ MiniAuth program interface.
 import sys
 from argparse import ArgumentParser
 from getpass import getpass
-from logging import getLogger, INFO, DEBUG, StreamHandler, Logger, NullHandler
+from logging import (getLogger, INFO, DEBUG, Logger,
+                     StreamHandler, NullHandler)
 from miniauth import __version__
 from miniauth.auth import MiniAuth
 from miniauth.typing import Any, Text, Tuple
@@ -168,7 +169,7 @@ def verify_user_from_opts(mini_auth, opts):
 def main(args=None):
     try:
         opts = parse_args(args)
-        configure_logger(logger, quiet=opts.quiet)
+        configure_logger(logger, quiet=opts.quiet, debug=opts.verbose)
 
         mini_auth = MiniAuth(db_path=opts.storage)
         if opts.action == 'verify':
