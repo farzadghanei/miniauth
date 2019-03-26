@@ -3,11 +3,58 @@ MiniAuth
 ********
 
 MiniAuth is a small program (and a Python library) for user authentication,
-providing an interface easy to integrate with other programs.
+with handy features, making it easy to use in different contexts and integrate with other programs.
 
-It's designed to be simple and portable.
-MiniAuth is written in Python, supports Python versions 2.7 and Python 3.4+,
+MiniAuth is simple and portable, runs on Python versions 2.7 and Python 3.4+ and
 has no dependencies other than Python standard library.
+
+When the Python package is installed, the `miniauth` CLI entrypoint is provided to manage and use a local database of users,
+using a SQLite backend.
+
+Here is how to create a user and password, then verifying the credentials:
+
+.. code-block::
+
+   $ miniauth save testuser
+   Password:
+
+   $ miniauth verify testuser
+   Password:
+   # exit codes report the result of verification
+
+
+By default a SQLite DB file is created in current working directory named `miniauth.db`.
+The path to this file can be configured with the `--storage` option.
+
+When verifying the credentials, the password can be specified as an argument, or
+read from standard input or a file.
+
+.. code-block::
+
+   $ miniauth --storage=user.db --verbose save testuser --password testpassword
+   No DB detected on "user.db". Creating latest DB schema ...
+   DB schema updated to version user.db on "1"
+   created user testuser
+
+   # read password from arguments
+   $ miniauth --storage=user.db --verbose verify testuser testpassword
+   user testuser credentials are correct
+
+   # read password from a file
+   $ cat file_with_password
+   testpassword
+   $ miniauth --storage=user.db --verbose verify testuser --password-file file_with_password
+   user testuser credentials are correct
+
+   # read username and password from a file
+   $ cat file_with_creds
+   testuser
+   testpassword
+   $ miniauth --storage=user.db --verbose verify testuser --creds-file file_with_creds
+   user testuser credentials are correct
+
+
+Authenticating users can be done in other Python applications using miniauth as a library.
 
 .. code-block:: python
 
@@ -21,42 +68,16 @@ has no dependencies other than Python standard library.
    False
 
 
-When the package is installed, a CLI tool is provided to manage and use a local database of users,
-using a SQLite backend.
+MiniAuth can use storage backends other than the default SQLite based one.
+Storage classes should inherit `AbstractStorage` and implement the abstract methods.
 
-.. code-block::
+.. code-block:: python
 
-   $ miniauth save testuser
-   Password:
-   # miniauth.db is a SQLite DB created in pwd
-
-   $ miniauth verify testuser
-   Password:
-   # exit codes report the result of verification
-
-   $ miniauth --help
-   usage: miniauth [-h] [-s STORAGE] [-q] [-v] [--version]
-                   {save,remove,disable,enable,verify} ...
-
-   manage a database of users
-
-   positional arguments:
-     {save,remove,disable,enable,verify}
-                           available actions
-       save                create or update a user
-       remove              remove a user
-       disable             disable an existing user
-       enable              enable an existing user
-       verify              verify user credentials
-
-   optional arguments:
-     -h, --help            show this help message and exit
-     -s STORAGE, --storage STORAGE
-                           the auth storage. default is miniauth.db
-     -q, --quiet           run in quiet mode (overwrites verbose)
-     -v, --verbose         run in verbose mode
-     --version             show program's version number and exit
-
+   >>> from miniauth.storage import AbstractStorage
+   >>> class CustomStorage(AbstractStorage):
+   ...      # implement abstract methods
+   ...      pass
+   >>> auth = MiniAuth('', CustomStorage())
 
 
 Installation
