@@ -6,7 +6,8 @@ MiniAuth program interface.
 import sys
 from argparse import ArgumentParser
 from getpass import getpass
-from logging import getLogger, INFO, DEBUG, StreamHandler, Logger, NullHandler
+from logging import (getLogger, INFO, DEBUG, Logger, Formatter,
+                     StreamHandler, NullHandler, FileHandler)
 from miniauth import __version__
 from miniauth.auth import MiniAuth
 from miniauth.typing import Any, Text, Tuple
@@ -28,6 +29,7 @@ def parse_args(args=None):
     parser.add_argument('-s', '--storage', default='miniauth.db', help='the auth storage. default is miniauth.db')
     parser.add_argument('-q', '--quiet', action='store_true', help='run in quiet mode (overwrites verbose)')
     parser.add_argument('-v', '--verbose', action='store_true', help='run in verbose mode')
+    parser.add_argument('-l', '--log', help='file path to log to')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     subparsers = parser.add_subparsers(dest='action', help='available actions')
 
@@ -65,9 +67,15 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 
-def configure_logger(logger, quiet=False, debug=False):
-    # type: (Logger, bool, bool) -> None
+def configure_logger(logger, file_path=None, quiet=False, debug=False):
+    # type: (Logger, str, bool, bool) -> None
     logger.setLevel(DEBUG)
+    if file_path:
+        file_handler = FileHandler(file_path, mode='at', encoding='utf-8')
+        file_handler.setFormatter(Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        file_handler.setLevel(DEBUG)
+        logger.addHandler(file_handler)
+
     if quiet:
         logger.addHandler(NullHandler())
     else:
@@ -168,7 +176,7 @@ def verify_user_from_opts(mini_auth, opts):
 def main(args=None):
     try:
         opts = parse_args(args)
-        configure_logger(logger, quiet=opts.quiet)
+        configure_logger(logger, file_path=opts.log, quiet=opts.quiet, debug=opts.verbose)
 
         mini_auth = MiniAuth(db_path=opts.storage)
         if opts.action == 'verify':
