@@ -29,7 +29,7 @@ class TestMiniAuth(BaseTestCase):
         self.mock_record = {
             'username': 'test',
             'password': self.password_hashed,
-            'disabled': True,
+            'disabled': False,
             'hash_func': 'sha256',
             'salt': '1111aaaa',
         }
@@ -172,10 +172,10 @@ class TestMiniAuth(BaseTestCase):
         self.assertTrue(ret)
         self.mock_storage.record_exists.assert_called_once_with('test')
 
-    def test_miniauth_user_is_disabled_return_disabled_field_of_record(self):
+    def test_miniauth_user_is_disabled_returns_disabled_field_of_record(self):
         self.mock_storage.get_record.return_value = self.mock_record
         ret = self.miniauth.user_is_disabled('test')
-        self.assertTrue(ret)
+        self.assertFalse(ret)
         self.mock_storage.get_record.assert_called_once_with('test')
 
     def test_miniauth_user_is_disabled_return_false_if_record_has_no_disabled(self):
@@ -191,7 +191,7 @@ class TestMiniAuth(BaseTestCase):
     def test_miniauth_verify_user_returns_true_if_password_hash_matches(self):
         self.assertTrue(self.miniauth.verify_user('test', 'abcd1234'))
 
-    def test_miniauth_verify_user_returns_false_if_password_hash_matches(self):
+    def test_miniauth_verify_user_returns_false_if_password_hash_doesnt_match(self):
         self.assertFalse(self.miniauth.verify_user('test', 'somethingelse'))
 
     def test_miniauth_verify_user_returns_false_if_password_is_empty(self):
@@ -210,3 +210,11 @@ class TestMiniAuth(BaseTestCase):
         self.mock_record['hash_func'] = ''
         self.mock_record['salt'] = ''
         self.assertFalse(self.miniauth.verify_user('test2', ''))
+
+    def test_miniauth_verify_user_returns_true_if_user_is_disabled_when_check_disabled_not_set(self):
+        self.mock_record['disabled'] = True
+        self.assertTrue(self.miniauth.verify_user('test', 'abcd1234', check_disabled=False))
+
+    def test_miniauth_verify_user_returns_false_if_user_is_disabled_when_check_disabled_set(self):
+        self.mock_record['disabled'] = True
+        self.assertFalse(self.miniauth.verify_user('test', 'abcd1234'))
