@@ -163,6 +163,16 @@ class TestVerifyUser(BaseTestCase):
         self.mock_logger = self.patch('miniauth.main.logger')
         self.mock_auth = Mock()
         self.mock_auth.verify_user.return_value = True
+        self.mock_auth.user_is_disabled.return_value = False
+
+    def test_verify_user_checks_user_disabled_returns_verifyfailed_if_disabled(self):
+        self.mock_auth.user_is_disabled.return_value = True
+        self.assertEqual(
+            verify_user(self.mock_auth, 'testuser', 'testpassword'),
+            EX_VERIFYFAILD
+        )
+        self.mock_auth.user_is_disabled.assert_called_once_with('testuser')
+        self.assertFalse(self.mock_auth.verify_user.called)
 
     def test_verify_user_calls_auth_verify_returns_ok_when_verified(self):
         self.assertEqual(
