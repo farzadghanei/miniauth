@@ -2,6 +2,10 @@
 MiniAuth
 ********
 
+.. image:: https://travis-ci.org/farzadghanei/miniauth.svg?branch=master
+    :target: https://travis-ci.org/farzadghanei/miniauth
+
+
 MiniAuth is a small program (and a Python library) for user authentication.
 with handy features, making it easy to use in different contexts and integrate with other programs.
 
