@@ -131,6 +131,9 @@ def enable_user(mini_auth, user, ignore_missing=False):
 
 def verify_user(mini_auth, user, password):
     # type: (MiniAuth, Text, Text) -> int
+    if mini_auth.user_is_disabled(user):
+        logger.info("user {} is disabled".format(user))
+        return EX_VERIFYFAILD
     if mini_auth.verify_user(user, password):
         logger.debug("user {} credentials are correct".format(user))
         return EX_OK

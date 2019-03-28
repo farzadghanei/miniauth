@@ -112,8 +112,10 @@ class MiniAuth(object):
         record = self._storage.get_record(username)
         return bool(record.get('disabled', False))
 
-    def verify_user(self, username, password):
-        # type: (Text, Text) -> bool
+    def verify_user(self, username, password, check_disabled=True):
+        # type: (Text, Text, bool) -> bool
         record = self._storage.get_record(username)
+        if check_disabled and record['disabled']:
+            return False
         password_hash = self.password_hash(password, record['hash_func'], record['salt'])
         return password_hash == record['password']
