@@ -2,7 +2,7 @@
 MiniAuth
 ********
 
-MiniAuth is a small program (and a Python library) for user authentication,
+MiniAuth is a small program (and a Python library) for user authentication.
 with handy features, making it easy to use in different contexts and integrate with other programs.
 
 MiniAuth is simple and portable, runs on Python versions 2.7 and Python 3.4+ and
@@ -10,6 +10,13 @@ has no dependencies other than Python standard library.
 
 When the Python package is installed, the `miniauth` CLI entrypoint is provided to manage and use a local database of users,
 using a SQLite backend.
+
+Features:
+
+* Passwords are stored salted and hashed. The hash is configurable per record, default is a secure choice (sha512)
+* Supports enabling/disabling users
+* Credentials can be specified in different ways: command line arguments, standard input, files
+* When used as a Python library, a custom storage can be used instead of default SQLite storage
 
 Here is how to create a user and password, then verifying the credentials:
 
@@ -50,7 +57,7 @@ read from standard input or a file.
    $ cat file_with_creds
    testuser
    testpassword
-   $ miniauth --storage=user.db --verbose verify testuser --creds-file file_with_creds
+   $ miniauth --storage=user.db --verbose verify --creds-file file_with_creds
    user testuser credentials are correct
 
 
